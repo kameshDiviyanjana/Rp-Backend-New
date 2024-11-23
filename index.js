@@ -3,10 +3,10 @@ dotenv.config()
 import express from 'express'
 import cors from 'cors'
 import morgan from 'morgan'
-import dbconnction from './database/db.js'
-import router from './routes/router.js'
-import {customError} from './utils/customeError.js'
-import {errcontro} from './utils/errorController.js'
+import dbconnction from './src/database/db.js'
+import router from './src/routes/router.js'
+import {customError} from './src/utils/customeError.js'
+import {errcontro} from './src/utils/errorController.js'
 const app = express()
 
 app.use(express.json({ limit: "50mb" }));
