@@ -7,7 +7,7 @@ import util from 'util'
 export const authenticateToken = async (req, res, next) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1];
-    console.log(token)
+
     if (!token) {
         const error = new customError('You are not authorized.', 401);
         console.log(error)
@@ -17,7 +17,7 @@ export const authenticateToken = async (req, res, next) => {
     try {
         const decodedToken = await util.promisify(jwt.verify)(token, process.env.SECTRE_TOKEN);
         req.user = decodedToken; // Attach decoded token payload to the request object
-        console.log(decodedToken)
+   
         const uservailide = await usernew.findById(decodedToken.id)
   
         if(!uservailide){
@@ -33,11 +33,11 @@ export const authenticateToken = async (req, res, next) => {
         if (error.name === 'TokenExpiredError') {
             const expiredError = new customError('JWT token has expired.', 401);
             expiredError.expiredAt = error.expiredAt; // Add expiredAt information to the error object
-            console.log(error)
+           
             return next(expiredError);
         } else {
             // Handle other JWT errors
-            console.log(error)
+           
             return next(error);
         }
     }
