@@ -14,15 +14,8 @@ app.use(express.urlencoded({ limit: "50mb" }));
 //app.use(express.urlencoded({ extended: true }))
 // app.use("*", cors());
 app.use(morgan("dev"));
-// app.use('*',
-//     cors()
-// );
-app.use(
-  cors({
-    origin: "https://research-4-down-syndrome.vercel.app", // Allow specific origin
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true, // Allow cookies if necessary
-  })
+app.use('*',
+    cors()
 );
 
 app.use('/bs',router)
