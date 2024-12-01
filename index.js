@@ -17,7 +17,13 @@ app.use(morgan("dev"));
 // app.use('*',
 //     cors()
 // );
-app.use(cors());
+app.use(
+  cors({
+    origin: "https://research-4-down-syndrome.vercel.app", // Allow specific origin
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true, // Allow cookies if necessary
+  })
+);
 
 app.use('/bs',router)
 app.all('*',(req,res,next)=>{
