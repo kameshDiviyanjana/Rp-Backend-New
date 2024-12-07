@@ -9,6 +9,7 @@ import lab  from './lab.js'
 const router = express.Router();
 import {authenticateToken,authorize} from '../utils/Authorize.js'
 import word from './words.js';
+import grossmotorskill from './grossmotor.js'
 // router.use('/user',authenticateToken,authorize(['ADMIN']),user)
 router.use("/user", user);
 router.use('/cou',couser)
@@ -16,6 +17,7 @@ router.use('/tm',timetable)
 router.use('/lab',lab)
 router.use('/log',log)
 router.use("/word", word);
+router.use("/grossmotor", grossmotorskill);
 
 export default router
 
