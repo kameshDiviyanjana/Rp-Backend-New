@@ -10,7 +10,7 @@ import random
 app = Flask(__name__)
 
 # Enable CORS for frontend-backend communication
-CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
 
 # Load the trained CNN model
 # "../models/hand_gesture_model.h5"
