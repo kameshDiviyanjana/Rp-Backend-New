@@ -1,0 +1,88 @@
+name: CI/CD for Node.js & Flask Microservices
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Node.js & Install Dependencies
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Node.js Dependencies
+        run: |
+          cd node-service
+          npm install
+
+      - name: Run Node.js Tests
+        run: |
+          cd node-service
+          npm test
+
+      # Setup Python & Install Dependencies
+      - name: Set Up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.10"
+
+      - name: Install Flask Dependencies
+        run: |
+          cd flask-service
+          pip install -r requirements.txt
+
+      - name: Run Flask Tests
+        run: |
+          cd flask-service
+          pytest
+
+  docker-build-push:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and Push Node.js Service
+        run: |
+          docker build -t mydockerhubuser/node-service:latest ./node-service
+          docker tag mydockerhubuser/node-service:latest mydockerhubuser/node-service:${{ github.run_number }}
+          docker push mydockerhubuser/node-service:latest
+          docker push mydockerhubuser/node-service:${{ github.run_number }}
+
+      - name: Build and Push Flask Service
+        run: |
+          docker build -t mydockerhubuser/flask-service:latest ./flask-service
+          docker tag mydockerhubuser/flask-service:latest mydockerhubuser/flask-service:${{ github.run_number }}
+          docker push mydockerhubuser/flask-service:latest
+          docker push mydockerhubuser/flask-service:${{ github.run_number }}
+
+  deploy:
+    needs: docker-build-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key $SERVER_USER@$SERVER_HOST << 'EOF'
+            cd /path/to/microservices
+            docker-compose down
+            docker pull mydockerhubuser/node-service:latest
+            docker pull mydockerhubuser/flask-service:latest
+            docker-compose up -d
+          EOF
