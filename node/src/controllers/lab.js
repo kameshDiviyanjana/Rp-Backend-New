@@ -1,12 +1,24 @@
 import {asyerrohander} from '../utils/error.js'
-import {removelabbyod,admingfindAllLabs,admingaddlab,avlablelab,reciveAvalbelHall} from '../services/lab.js' 
+import {
+  removelabbyod,
+  admingfindAllLabs,
+  admingaddlab,
+  avlablelab,
+  reciveAvalbelHall,
+  lastresyltserives,
+} from "../services/lab.js"; 
 import { makerespon } from "../utils/respon.js";
 
 export const labavableController = asyerrohander(async(req, res,next)=>{
 
-     const labavlable = await avlablelab();
+     const labavlable = await avlablelab(req.query);
      return makerespon({ res, data: labavlable, message: "avable labs " });
 })
+
+export const lastresults = asyerrohander(async (req, res, next) => {
+  const labavlable = await lastresyltserives(req.query);
+  return makerespon({ res, data: labavlable, message: "avable labs " });
+});
 
   
   export const removelabcontroller = async (req, res,next) => {

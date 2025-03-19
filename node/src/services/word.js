@@ -11,12 +11,12 @@ import {
 
 export const createwordService = async (payload) => {
   try {
-    const diet = await findwordsefilter({ wordAdd: payload.wordAdd });
-    if (diet)
-      throw new createError(
-        400,
-        `The wordAdd name is already in use. Please Enter a different wordAdd name.`
-      );
+    // const diet = await findwordsefilter({ wordAdd: payload.wordAdd });
+    // if (diet)
+    //   throw new createError(
+    //     400,
+    //     `The wordAdd name is already in use. Please Enter a different wordAdd name.`
+    //   );
     const newword = await createwordseRepo({ ...payload });
     if (!newword) throw new createError(400, "Diet Type adding failed");
     return newword;

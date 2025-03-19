@@ -1,4 +1,4 @@
-import lab from '../models/lab.js'
+import speech from "../models/speeach-results.js";
 import {customError} from '../utils/customeError.js'
 export const labbyid = async()=>{
 
@@ -6,7 +6,7 @@ export const labbyid = async()=>{
 }
 export const admingDleteLab = async(id)=>{
 
-    const labdelete  = await lab.findByIdAndDelete({_id:id})
+    const labdelete = await speech.findByIdAndDelete({ _id: id });
     return labdelete
      
 }
@@ -16,7 +16,7 @@ export const findlabid = async()=>{
 }
 export const creatlabadming = async(couser)=>{
  
-         const newOrders = (await new lab(couser).save()).toObject();
+         const newOrders = (await new speech(couser).save()).toObject();
        
         return newOrders;
     
@@ -25,7 +25,7 @@ export const creatlabadming = async(couser)=>{
 
 export const admingAllLab = async()=>{
 
-    const allcouse = await lab.find()
+    const allcouse = await speech.find();
     return allcouse
 }
 
@@ -48,14 +48,22 @@ export const receivelab = async(id,rserve)=>{
     //     }
 
      
-    const cousert = await lab.findByIdAndUpdate({_id:id},rserve);
+    const cousert = await speech.findByIdAndUpdate({ _id: id }, rserve);
 
     return cousert
    
 }
 
-export const avalabelelabs = async()=>{
+export const avalabelelabs = async (data) => {
+  const allcouse = await speech.find({ userid: data });
+  return allcouse;
+};
 
-    const allcouse = await lab.find({ reservaction: "N" });
-    return allcouse;
-}
+export const findlastrow = async (data) => {
+  const lastRow = await speech
+    .find({ userid: data }) // Filter by userid
+    .sort({ createdAt: -1 }) // Sort by createdAt in descending order (latest first)
+    .limit(1); // Only return the first result (the most recent one)
+
+  return lastRow[0]; // Return the first item from the array
+};

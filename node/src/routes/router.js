@@ -10,6 +10,7 @@ const router = express.Router();
 import {authenticateToken,authorize} from '../utils/Authorize.js'
 import word from './words.js';
 import score from './score.js';
+import sppechresults from './speechresults.js';
 // router.use('/user',authenticateToken,authorize(['ADMIN']),user)
 router.use("/user", user);
 router.use('/cou',couser)
@@ -18,6 +19,8 @@ router.use('/lab',lab)
 router.use('/log',log)
 router.use("/word", word);
 router.use("/score", score);
+router.use("/speech", sppechresults);
+
 
 export default router
 
