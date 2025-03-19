@@ -33,7 +33,7 @@ def predict_cluster():
 
         return jsonify({
             "cluster": int(cluster),
-            "confidence": f"{confidence:.2f}%"
+            "confidence": f"{confidence:.2f}"
         })
     except Exception as e:
         print(f"Error in prediction: {e}")
