@@ -254,6 +254,7 @@ from flask_cors import CORS
 from routes.audio_routes import audio_bp
 from routes.video_routes import video_bp
 from routes.image_routes import image_bp
+from routes.fingerCounting import finger_counting_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -261,6 +262,11 @@ CORS(app)
 app.register_blueprint(audio_bp, url_prefix="/audio")
 app.register_blueprint(video_bp, url_prefix="/video")
 app.register_blueprint(image_bp, url_prefix="/image")
+app.register_blueprint(finger_counting_bp, url_prefix="/finger_counting")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    try:
+        app.run(debug=True)
+    finally:
+        from routes.finger_counting_routes import cleanup
+        cleanup()
