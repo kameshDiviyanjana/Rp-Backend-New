@@ -262,7 +262,7 @@ CORS(app)
 app.register_blueprint(audio_bp, url_prefix="/audio")
 app.register_blueprint(video_bp, url_prefix="/video")
 app.register_blueprint(image_bp, url_prefix="/image")
-app.register_blueprint(finger_counting_bp, url_prefix="/finger_counting")
+app.register_blueprint(finger_counting_bp, url_prefix="/finger_counting") 
 
 if __name__ == '__main__':
     try:
@@ -270,3 +270,4 @@ if __name__ == '__main__':
     finally:
         from routes.finger_counting_routes import cleanup
         cleanup()
+ 

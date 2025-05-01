@@ -150,6 +150,7 @@ def edge_based_finger_count(img_gray, lmList):
                 finger_count += 1
     
     return finger_count
+    
 
 def generate_finger_counting_frames():
     global pTime, latest_finger_count, latest_confidence, finger_count_history, current_state
