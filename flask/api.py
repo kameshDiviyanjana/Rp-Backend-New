@@ -23,7 +23,7 @@ from flask_cors import CORS
 from routes.audio_routes import audio_bp
 from routes.video_routes import video_bp
 from routes.image_routes import image_bp
-from routes.writing_routes import writing_bp
+from routes.fingerCounting import finger_counting_bp
 
 app = Flask(__name__)
 CORS(app)
@@ -31,7 +31,12 @@ CORS(app)
 app.register_blueprint(audio_bp, url_prefix="/audio")
 app.register_blueprint(video_bp, url_prefix="/video")
 app.register_blueprint(image_bp, url_prefix="/image")
-app.register_blueprint(writing_bp, url_prefix="/writing") # Register writing blueprint
+app.register_blueprint(finger_counting_bp, url_prefix="/finger_counting") 
 
-if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000) # Make sure port is 5001, and host is accessible
+if __name__ == '__main__':
+    try:
+        app.run(debug=True)
+    finally:
+        from routes.finger_counting_routes import cleanup
+        cleanup()
+ 
