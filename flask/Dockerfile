@@ -5,7 +5,7 @@
 # COPY . .
 # CMD ["python", "app.py"]
 # EXPOSE 5000
-FROM python:3.11
+FROM python:3.9.6
 
 WORKDIR /app
 
