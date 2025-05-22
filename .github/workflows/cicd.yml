@@ -125,7 +125,7 @@ name: Deploy Python Flask API to EC2
 
 on:
   push:
-    branches: [main]
+    branches: [fix/new-intigartion-all]
   workflow_dispatch:
 
 jobs:
