@@ -87,36 +87,85 @@
 #             docker-compose up -d
 #           EOF
 
-name: Deploy Flask API to EC2
+# name: Deploy Flask API to EC2
+
+# on:
+#   push:
+#     branches: [fix/new-intigartion-all]
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+
+#       - name: Set up SSH key
+#         run: |
+#           echo "${{ secrets.EC2_SSH_KEY }}" | base64 -d > key.pem
+#           chmod 600 key.pem
+
+#       - name: Deploy and run Flask API
+#         run: |
+#           ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+#             cd ${{ secrets.PROJECT_PATH }}
+#             git pull origin main
+#             source venv/bin/activate
+#             pip install -r requirements.txt
+
+#             # Kill existing process if running
+#             pkill -f api.py || true
+
+#             # Run in background using nohup
+#             nohup python api.py > output.log 2>&1 &
+#           EOF
+
+name: Deploy Python Flask API to EC2
 
 on:
   push:
-    branches: [fix/new-intigartion-all]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Set up SSH key
+      - name: Setup SSH
         run: |
-          echo "${{ secrets.EC2_SSH_KEY }}" | base64 -d > key.pem
-          chmod 600 key.pem
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" | tr -d '\r' | sed 's/\\n/\n/g' > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy and run Flask API
+      - name: Upload Flask App to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            cd ${{ secrets.PROJECT_PATH }}
-            git pull origin main
+          rsync -avz -e "ssh -i ~/.ssh/deploy_key" ./ ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/flask-api
+
+      - name: Install Python Dependencies & Run Flask App
+        run: |
+          ssh -i ~/.ssh/deploy_key ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /home/ubuntu/flask-api
+
+            # Install Python and pip if not installed
+            sudo apt update
+            sudo apt install -y python3 python3-pip python3-venv
+
+            # Set up virtual environment
+            python3 -m venv venv
             source venv/bin/activate
+
+            # Install dependencies
             pip install -r requirements.txt
 
-            # Kill existing process if running
+            # Kill existing process running api.py (optional)
             pkill -f api.py || true
 
-            # Run in background using nohup
-            nohup python api.py > output.log 2>&1 &
+            # Run Flask app in background
+            nohup python api.py > flask.log 2>&1 &
           EOF
