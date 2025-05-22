@@ -4,6 +4,11 @@ from utils.audio_processing import preprocess_audio
 
 audio_bp = Blueprint("audio_bp", __name__)
 
+
+@audio_bp.route('/dd', methods=['GET'])
+def count_fingers():
+    return jsonify({"message": "Finger counting works!"})
+
 @audio_bp.route('/predict', methods=['POST'])
 def predict_cluster():
     if 'file' not in request.files:
