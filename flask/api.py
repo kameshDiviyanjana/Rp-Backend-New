@@ -37,10 +37,15 @@ app.register_blueprint(finger_counting_bp, url_prefix="/finger_counting")
 # app.register_blueprint(finger_counting_bp, url_prefix="/finger_countingss")
 
 
+# if __name__ == '__main__':
+#     try:
+#         app.run(debug=True)
+#     finally:
+#         from routes.finger_counting_routes import cleanup
+#         cleanup()
 if __name__ == '__main__':
     try:
-        app.run(debug=True)
+        app.run(host='0.0.0.0', port=5002, debug=True)
     finally:
         from routes.finger_counting_routes import cleanup
         cleanup()
- 
