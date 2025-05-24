@@ -45,6 +45,7 @@ class handDetector():
         self.mpDraw = mp.solutions.drawing_utils 
         self.results = None  
 
+#find the hand in image and draw land marks
     def findHands(self, img, draw=True):
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         self.results = self.hands.process(imgRGB)
@@ -53,24 +54,28 @@ class handDetector():
                 self.mpDraw.draw_landmarks(img, handLms, self.mpHands.HAND_CONNECTIONS)
         return img  
 
+#func to get hand landmarks postions
     def findPosition(self, img, handNo=0, draw=True):
         lmList = []
         if self.results and self.results.multi_hand_landmarks and handNo < len(self.results.multi_hand_landmarks):
             myHand = self.results.multi_hand_landmarks[handNo]
             for id, lm in enumerate(myHand.landmark):
+                #get img size for convert normalized cordinates to prixels
                 h, w, c = img.shape
                 cx, cy = int(lm.x * w), int(lm.y * h)
+                #store land marks ids with it position
                 lmList.append([id, cx, cy])
                 if draw:
                     cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
         return lmList
 
+#func to get the hand (right or left)
     def getHandLabel(self, handNo=0):
         if self.results and self.results.multi_handedness and handNo < len(self.results.multi_handedness):
             return self.results.multi_handedness[handNo].classification[0].label  
         return None  
 
-# Initialize detector
+# create a hnd detector
 detector = handDetector(detectionCon=0.75, maxHands=2)    
 
 def preprocess_image(img):
@@ -78,30 +83,44 @@ def preprocess_image(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     enhanced = clahe.apply(gray)
+    #contrast lvl
     alpha = 2.0
+    #brightness lvl
     beta = 30
     adjusted = cv2.convertScaleAbs(enhanced, alpha=alpha, beta=beta)
     blurred = cv2.GaussianBlur(adjusted, (5, 5), 0)
     return blurred, img
 
+#func to calc distance between 2 points
 def calculate_distance(point1, point2):
     return math.sqrt((point1[0] - point2[0])**2 + (point1[1] - point2[1])**2)
 
+#func to calc the angle point lines
 def calculate_angle(point1, point2, point3):
+    #MCP to PIP line
     vector1 = [point1[0] - point2[0], point1[1] - point2[1]]  
+    #PIP to finger tip line
     vector2 = [point3[0] - point2[0], point3[1] - point2[1]]  
     dot_product = vector1[0] * vector2[0] + vector1[1] * vector2[1]
+
+    #length of 1st line
     mag1 = math.sqrt(vector1[0]**2 + vector1[1]**2)
+    #len of 2nd line
     mag2 = math.sqrt(vector2[0]**2 + vector2[1]**2)  
     if mag1 == 0 or mag2 == 0: 
         return 0
+    
+    #cos angle 
     cos_angle = dot_product / (mag1 * mag2) 
     cos_angle = max(min(cos_angle, 1), -1)  
+    # conv to degrees and return
     return math.degrees(math.acos(cos_angle)) 
 
+#calc confidence based on histroy
 def calculate_confidence(history):
     if not history: 
         return 0.0
+    #count how often each number is appear 
     counter = Counter(history)  
     most_common_count, frequency = counter.most_common(1)[0]  
     return frequency / len(history)
@@ -111,24 +130,28 @@ def edge_based_finger_count(img_gray, lmList):
     edges = cv2.Canny(img_gray, 50, 150)
     
     if len(lmList) == 0:
-        # No landmarks: Check for hand-like structure
+        # check whole img for for fingers if no landmarks 
+
+        #get edge amount
         edge_density = np.sum(edges) / (edges.shape[0] * edges.shape[1])
-        if edge_density < 10:  # Low edge density = no hand
+        #check if edges are too few
+        if edge_density < 10: 
             return 0
         
-        # Find contours in full image
+        # Find shapes in edges
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         finger_count = 0
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area > 100:  # Filter small noise
+            if area > 100:  # ignore small shapes
+                #box size shapes get
                 x, y, w, h = cv2.boundingRect(cnt)
                 aspect_ratio = w / h if h > 0 else 0
-                if 0.2 < aspect_ratio < 1.0 and h > 20:  # Finger-like shape
+                if 0.2 < aspect_ratio < 1.0 and h > 20:  #filter  finger like shape
                     finger_count += 1
         return finger_count
     
-    # Landmarks present: Focus on hand region
+    #  Focus on hand area
     min_x = max(0, min([lm[1] for lm in lmList]) - 30)
     max_x = min(img_gray.shape[1], max([lm[1] for lm in lmList]) + 30)
     min_y = max(0, min([lm[2] for lm in lmList]) - 30)
@@ -138,7 +161,7 @@ def edge_based_finger_count(img_gray, lmList):
     if roi.size == 0:
         return 0
     
-    # Find contours in hand region
+    # Find boundaries in hand obj
     contours, _ = cv2.findContours(roi, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     finger_count = 0
     for cnt in contours:
@@ -151,7 +174,7 @@ def edge_based_finger_count(img_gray, lmList):
     
     return finger_count
     
-
+#func to create video strame
 def generate_finger_counting_frames():
     global pTime, latest_finger_count, latest_confidence, finger_count_history, current_state
     while True:
@@ -209,11 +232,11 @@ def generate_finger_counting_frames():
                     totalFingers += hand_fingers 
                     finger_names = ["Thumb", "Index", "Middle", "Ring", "Pinky"] 
                     up_fingers = [finger_names[i] for i in range(5) if fingers[i] == 1]  
-                    debug_text.append(f"Hand {handNo+1} ({handLabel}): Landmark: {hand_fingers}")  
+                    #debug_text.append(f"Hand {handNo+1} ({handLabel}): Landmark: {hand_fingers}")  
 
                     # Edge-based counting per hand
                     edge_fingers += edge_based_finger_count(img_gray, lmList)
-                    debug_text.append(f"Edge: {edge_fingers}")
+                    # debug_text.append(f"Edge: {edge_fingers}")
 
             # Combine counts
             final_count = totalFingers
@@ -252,14 +275,14 @@ def generate_finger_counting_frames():
                 base_confidence = calculate_confidence(finger_count_history)
                 latest_finger_count = totalFingers
                 latest_confidence = base_confidence * 0.5  # Lower confidence without landmarks
-            debug_text.append(f"Edge (No Landmarks): {edge_fingers}")
+            # debug_text.append(f"Edge (No Landmarks): {edge_fingers}")
 
         cTime = time.time()
         fps = 1 / (cTime - pTime) if (cTime - pTime) != 0 else 0  
         pTime = cTime
         cv2.putText(img, f'Conf: {latest_confidence:.2f}', (20, 110), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 255), 2)
         cv2.putText(img, f'Fingers: {latest_finger_count}', (20, 70), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 2)
-        cv2.putText(img, f'State: {current_state}', (20, 150), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
+        # cv2.putText(img, f'State: {current_state}', (20, 150), cv2.FONT_HERSHEY_PLAIN, 2, (255, 0, 255), 2)
         for i, text in enumerate(debug_text):
             cv2.putText(img, text, (20, 190 + i*40), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 255), 2)
 
