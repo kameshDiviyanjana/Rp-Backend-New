@@ -12,6 +12,8 @@ import axios from 'axios';
 import fs from 'fs';
 import FormData from 'form-data';
 import { progressRoutes } from './src/routes/progressRoutes.js';
+import languagePreferenceRoutes from './src/routes/languagePreferenceRoutes.js';
+
 const app = express();
 
 app.use(express.json({ limit: "50mb" }));
@@ -23,6 +25,7 @@ app.use('*', cors());
 const upload = multer({ dest: "uploads/" });
 
 app.use("/api/progress", progressRoutes);
+app.use('/api/language-preferences',languagePreferenceRoutes );
 app.use('/bs', router);
 
 //  This was previously blocking `/predict-math`
